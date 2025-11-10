@@ -6,9 +6,3 @@ server:
 grpc:
   server:
     port: 9092
-management:
-  tracing:
-    enabled: true
-  otlp:
-    tracing:
-      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}

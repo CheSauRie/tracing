@@ -1,6 +1,6 @@
 # Distributed tracing demo services
 
-This repository contains three Spring Boot 3.2.0 services built with Java 21 that demonstrate REST, gRPC, WebSocket, and NATS (message queue) interactions instrumented with OpenTelemetry for use with Tempo or any OTLP compatible collector.
+This repository contains three Spring Boot 3.2.0 services built with Java 21 that demonstrate REST, gRPC, WebSocket, and NATS (message queue) interactions.
 
 ## Modules
 
@@ -17,7 +17,7 @@ mvn clean package
 
 ## Running the services
 
-Each service can be launched separately. They expect supporting infrastructure (Tempo/OTLP collector and NATS) to already be running.
+Each service can be launched separately. They expect supporting infrastructure (such as NATS) to already be running.
 
 ```bash
 # terminal 1
@@ -32,7 +32,6 @@ mvn -pl gateway-service spring-boot:run
 
 Environment variables can be used to override defaults:
 
-- `OTEL_EXPORTER_OTLP_ENDPOINT` – OTLP trace exporter endpoint (default `http://localhost:4317`).
 - `NATS_URL` – NATS server URL (default `nats://localhost:4222`).
 - `INVENTORY_HTTP_BASE_URL` – Inventory REST URL for the operation service.
 - `INVENTORY_GRPC_TARGET` – Inventory gRPC target for the operation service.
