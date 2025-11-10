@@ -4,6 +4,8 @@ import com.example.proto.InventoryReply;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import io.nats.client.Connection;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -29,15 +31,18 @@ public class OperationController {
     private final InventoryGrpcClient inventoryGrpcClient;
     private final Connection connection;
     private final ObservationRegistry observationRegistry;
+    private final Tracer tracer;
 
     public OperationController(WebClient webClient,
                                InventoryGrpcClient inventoryGrpcClient,
                                Connection connection,
-                               ObservationRegistry observationRegistry) {
+                               ObservationRegistry observationRegistry,
+                               Tracer tracer) {
         this.webClient = webClient;
         this.inventoryGrpcClient = inventoryGrpcClient;
         this.connection = connection;
         this.observationRegistry = observationRegistry;
+        this.tracer = tracer;
     }
 
     @GetMapping("/execute/{itemId}")
@@ -63,12 +68,15 @@ public class OperationController {
     }
 
     private void publishNatsEvent(String itemId, String status) {
-        Observation observation = Observation.createNotStarted("operation.nats.publish", observationRegistry)
-                .lowCardinalityKeyValue("item.id", itemId);
-        observation.observe(() -> {
+        Span span = tracer.spanBuilder("operation-service.nats.publish")
+                .setAttribute("item.id", itemId)
+                .startSpan();
+        try {
             String payload = "{\"itemId\":\"" + itemId + "\",\"status\":\"" + status + "\"}";
             connection.publish("operations.updates", payload.getBytes(StandardCharsets.UTF_8));
             log.info("Published event to NATS for item {}", itemId);
-        });
+        } finally {
+            span.end();
+        }
     }
 }

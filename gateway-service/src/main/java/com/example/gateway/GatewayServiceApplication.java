@@ -1,8 +1,5 @@
-package com.example.operation;
+package com.example.gateway;
 
-import io.nats.client.Connection;
-import io.nats.client.Nats;
-import io.nats.client.Options;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -16,45 +13,22 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import java.io.IOException;
-import java.time.Duration;
 
 @SpringBootApplication
-public class OperationServiceApplication {
+public class GatewayServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(OperationServiceApplication.class, args);
+        SpringApplication.run(GatewayServiceApplication.class, args);
     }
 }
 
 @Configuration
-class OperationServiceConfiguration {
-
-    @Bean
-    public WebClient inventoryWebClient(@Value("${inventory.service.http-base-url:http://localhost:8081}") String baseUrl) {
-        return WebClient.builder().baseUrl(baseUrl).build();
-    }
-
-    @Bean
-    public Connection natsConnection(@Value("${nats.url:nats://localhost:4222}") String url) throws IOException, InterruptedException {
-        Options options = new Options.Builder()
-                .server(url)
-                .connectionTimeout(Duration.ofSeconds(2))
-                .maxReconnects(-1)
-                .build();
-        return Nats.connect(options);
-    }
-}
-
-@Configuration
-class OperationTelemetryConfiguration {
+class GatewayTelemetryConfiguration {
 
     @Bean
     @Primary
     public OpenTelemetrySdk openTelemetry(@Value("${management.otlp.tracing.endpoint:http://localhost:4317}") String endpoint,
-                                          @Value("${spring.application.name:operation-service}") String serviceName) {
+                                          @Value("${spring.application.name:gateway-service}") String serviceName) {
         OtlpGrpcSpanExporter exporter = OtlpGrpcSpanExporter.builder()
                 .setEndpoint(endpoint)
                 .build();
@@ -75,6 +49,6 @@ class OperationTelemetryConfiguration {
 
     @Bean
     public Tracer tracer(OpenTelemetrySdk openTelemetrySdk) {
-        return openTelemetrySdk.getTracer("operation-service");
+        return openTelemetrySdk.getTracer("gateway-service");
     }
 }
