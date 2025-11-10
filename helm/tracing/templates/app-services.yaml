@@ -1,0 +1,32 @@
+{{- range $name, $app := .Values.apps }}
+{{- if and (default true $app.enabled) $app.service }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tracing.fullname" (dict "context" $ "name" $name) }}
+  labels:
+    {{- include "tracing.labels" (dict "context" $ "name" $name "component" $app.component) | nindent 4 }}
+  {{- with $app.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ default "ClusterIP" $app.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+  {{- with $app.service.clusterIP }}
+  clusterIP: {{ . }}
+  {{- end }}
+  ports:
+    {{- range $port := $app.service.ports }}
+    - name: {{ $port.name }}
+      port: {{ $port.port }}
+      targetPort: {{ default $port.port $port.targetPort }}
+      {{- if $port.protocol }}
+      protocol: {{ $port.protocol }}
+      {{- end }}
+    {{- end }}
+{{- end }}
+{{- end }}

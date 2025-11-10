@@ -1,0 +1,109 @@
+global:
+  imagePullSecrets: []
+
+apps:
+  gateway:
+    enabled: true
+    component: gateway
+    fullnameOverride: gateway-service
+    replicaCount: 1
+    image:
+      repository: ghcr.io/example/gateway-service
+      tag: latest
+      pullPolicy: IfNotPresent
+    containerPorts:
+      - name: http
+        containerPort: 8082
+      - name: grpc
+        containerPort: 9092
+    service:
+      type: ClusterIP
+      ports:
+        - name: http
+          port: 8082
+        - name: grpc
+          port: 9092
+    env:
+      - name: NATS_URL
+        value: nats://nats:4222
+      - name: INVENTORY_HTTP_BASE_URL
+        value: http://inventory-service:8081
+      - name: INVENTORY_GRPC_TARGET
+        value: static://inventory-service:9091
+    resources: {}
+
+  inventory:
+    enabled: true
+    component: inventory
+    fullnameOverride: inventory-service
+    replicaCount: 1
+    image:
+      repository: ghcr.io/example/inventory-service
+      tag: latest
+      pullPolicy: IfNotPresent
+    containerPorts:
+      - name: http
+        containerPort: 8081
+      - name: grpc
+        containerPort: 9091
+    service:
+      type: ClusterIP
+      ports:
+        - name: http
+          port: 8081
+        - name: grpc
+          port: 9091
+    env:
+      - name: NATS_URL
+        value: nats://nats:4222
+    resources: {}
+
+  operation:
+    enabled: true
+    component: operation
+    fullnameOverride: operation-service
+    replicaCount: 1
+    image:
+      repository: ghcr.io/example/operation-service
+      tag: latest
+      pullPolicy: IfNotPresent
+    containerPorts:
+      - name: http
+        containerPort: 8080
+    service:
+      type: ClusterIP
+      ports:
+        - name: http
+          port: 8080
+    env:
+      - name: NATS_URL
+        value: nats://nats:4222
+      - name: INVENTORY_HTTP_BASE_URL
+        value: http://inventory-service:8081
+      - name: INVENTORY_GRPC_TARGET
+        value: static://inventory-service:9091
+    resources: {}
+
+  nats:
+    enabled: true
+    component: messaging
+    fullnameOverride: nats
+    replicaCount: 1
+    image:
+      repository: nats
+      tag: 2.10.14
+      pullPolicy: IfNotPresent
+    containerPorts:
+      - name: client
+        containerPort: 4222
+      - name: monitoring
+        containerPort: 8222
+    service:
+      type: ClusterIP
+      ports:
+        - name: client
+          port: 4222
+        - name: monitoring
+          port: 8222
+    env: []
+    resources: {}
