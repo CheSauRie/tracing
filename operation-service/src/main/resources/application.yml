@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: operation-service
+server:
+  port: 8080
+grpc:
+  client:
+    inventoryService:
+      address: ${INVENTORY_GRPC_TARGET:static://localhost:9091}
+      negotiationType: plaintext
+inventory:
+  service:
+    http-base-url: ${INVENTORY_HTTP_BASE_URL:http://localhost:8081}
+nats:
+  url: ${NATS_URL:nats://localhost:4222}
+management:
+  tracing:
+    enabled: true
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
