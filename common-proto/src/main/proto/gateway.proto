@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.example.proto";
+option java_outer_classname = "GatewayProto";
+
+package gateway;
+
+service ClientGateway {
+  rpc Ping (GatewayRequest) returns (GatewayReply);
+}
+
+message GatewayRequest {
+  string name = 1;
+}
+
+message GatewayReply {
+  string message = 1;
+}

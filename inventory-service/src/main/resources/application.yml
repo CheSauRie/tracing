@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: inventory-service
+server:
+  port: 8081
+grpc:
+  server:
+    port: 9091
+nats:
+  url: ${NATS_URL:nats://localhost:4222}
+management:
+  tracing:
+    enabled: true
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
