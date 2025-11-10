@@ -1,0 +1,100 @@
+{{- range $name, $app := .Values.apps }}
+{{- if (default true $app.enabled) }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tracing.fullname" (dict "context" $ "name" $name) }}
+  labels:
+    {{- include "tracing.labels" (dict "context" $ "name" $name "component" $app.component) | nindent 4 }}
+spec:
+  replicas: {{ default 1 $app.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $name }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $name }}
+        app.kubernetes.io/instance: {{ $.Release.Name }}
+        {{- with $app.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with $app.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- if or $.Values.global.imagePullSecrets $app.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range $secret := (default (list) $.Values.global.imagePullSecrets) }}
+        - name: {{ $secret }}
+        {{- end }}
+        {{- range $secret := (default (list) $app.imagePullSecrets) }}
+        - name: {{ $secret }}
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ default $name $app.containerName }}
+          image: "{{ $app.image.repository }}:{{ default $.Chart.AppVersion $app.image.tag }}"
+          imagePullPolicy: {{ default "IfNotPresent" $app.image.pullPolicy }}
+          {{- with $app.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $app.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $app.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $app.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $app.containerPorts }}
+          ports:
+            {{- range . }}
+            - name: {{ .name }}
+              containerPort: {{ .containerPort }}
+              {{- if .protocol }}
+              protocol: {{ .protocol }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- with $app.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $app.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with $app.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $app.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ . }}
+      {{- end }}
+      {{- with $app.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $app.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $app.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $app.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
+{{- end }}
